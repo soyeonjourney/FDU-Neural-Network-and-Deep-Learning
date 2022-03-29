@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List
+from typing import List, Tuple
 
 
 class Tensor:
@@ -178,7 +178,7 @@ class Reshape(Function):
     def __repr__(self) -> str:
         return 'Function(Reshape)'
 
-    def forward(self, a: 'Tensor', *shape: int or tuple) -> 'Tensor':
+    def forward(self, a: 'Tensor', *shape: Tuple[int, ...]) -> 'Tensor':
         self.save_backward_node([a])
         if isinstance(shape[0], int):
             return Tensor(
