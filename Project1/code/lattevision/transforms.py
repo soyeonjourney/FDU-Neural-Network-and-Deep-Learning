@@ -21,6 +21,11 @@ class Transform:
         raise NotImplementedError
 
 
+#########################################################################################
+#                                         Image                                         #
+#########################################################################################
+
+
 class Resize(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
         if np.isscalar(size):
@@ -87,6 +92,11 @@ class ToTensor(Transform):
 
     def __call__(self, img: Image.Image) -> np.ndarray:
         return np.array(img).transpose((2, 0, 1)) / 255.0
+
+
+#########################################################################################
+#                                         Array                                         #
+#########################################################################################
 
 
 class Normalize(Transform):
