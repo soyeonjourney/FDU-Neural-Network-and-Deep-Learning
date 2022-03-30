@@ -87,7 +87,7 @@ class Tensor:
         self.grad = np.array([1.0]).reshape(1, 1)  # Create implicit gradient
         for node in reversed(graph):
             if node.grad_fn is not None:
-                node.grad_fn.backward()
+                node.grad_fn.backward(node.grad)
 
 
 class Function:
