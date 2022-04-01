@@ -35,4 +35,3 @@ class DataLoader:
                 self.iter * self.batch_size : (self.iter + 1) * self.batch_size
             ]
             return self.dataset[indices]
-
