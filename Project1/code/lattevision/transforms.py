@@ -101,21 +101,28 @@ class ToTensor(Transform):
 
 class Normalize(Transform):
     def __init__(self, mean: Tuple[float, ...], std: Tuple[float, ...]) -> None:
-        if np.isscalar(mean):
-            self.mean = (mean, mean, mean)
-        else:
-            self.mean = mean
-
-        if np.isscalar(std):
-            self.std = (std, std, std)
-        else:
-            self.std = std
+        self.mean = mean
+        self.std = std
 
     def __repr__(self) -> str:
         return f'Transform(Normalize(mean={self.mean}, std={self.std}))'
 
     def __call__(self, array: np.ndarray) -> np.ndarray:
-        return (array - self.mean) / self.std
+        if np.isscalar(self.mean):
+            mean = self.mean
+        else:
+            shape = [1 for _ in range(array.ndim)]
+            shape[0] = array.shape[0] if len(self.mean) == 1 else len(self.mean)
+            mean = np.reshape(self.mean, shape)
+
+        if np.isscalar(self.std):
+            std = self.std
+        else:
+            shape = [1 for _ in range(array.ndim)]
+            shape[0] = array.shape[0] if len(self.std) == 1 else len(self.std)
+            std = np.reshape(self.std, shape)
+
+        return (array - mean) / std
 
 
 class Flatten(Transform):
