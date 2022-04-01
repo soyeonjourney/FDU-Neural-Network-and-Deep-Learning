@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple, Dict
 from latte.utils.data import Dataset
 import os
 import requests
@@ -30,7 +30,7 @@ class VisionDataset(Dataset):
         self.labels = None
         self._load_dataset()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Tuple[np.ndarray, np.ndarray]:
         assert np.isscalar(index), "Index must be a scalar"
 
         if self.labels is None:
@@ -41,10 +41,10 @@ class VisionDataset(Dataset):
                 self.target_transform(self.labels[index]),
             )
 
-    def _load_dataset(self):
+    def _load_dataset(self) -> None:
         raise NotImplementedError
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
 
@@ -58,7 +58,7 @@ class MNIST(VisionDataset):
     ) -> None:
         super().__init__(root, train, transform, target_transform)
 
-    def _load_dataset(self):
+    def _load_dataset(self) -> None:
         url = 'http://yann.lecun.com/exdb/mnist/'
         if self.train:
             data_filename = 'train-images-idx3-ubyte.gz'
@@ -67,24 +67,24 @@ class MNIST(VisionDataset):
             data_filename = 't10k-images-idx3-ubyte.gz'
             labels_filename = 't10k-labels-idx1-ubyte.gz'
 
-        data_filepath = get_data(self.root, url, data_filename)
-        labels_filepath = get_data(self.root, url, labels_filename)
+        data_filepath = get_data(url + data_filename, self.root)
+        labels_filepath = get_data(url + labels_filename, self.root)
 
         self.data = self._load_data(data_filepath)
         self.labels = self._load_labels(labels_filepath)
 
-    def _load_data(self, filepath):
+    def _load_data(self, filepath: str) -> np.ndarray:
         with gzip.open(filepath, 'rb') as f:
             data = np.frombuffer(f.read(), np.uint8, offset=16)
         data = data.reshape(-1, 1, 28, 28)
         return data
 
-    def _load_labels(self, filepath):
+    def _load_labels(self, filepath: str) -> np.ndarray:
         with gzip.open(filepath, 'rb') as f:
             labels = np.frombuffer(f.read(), np.uint8, offset=8)
         return labels
 
-    def show(self, row: int = 10, col: int = 10):
+    def show(self, row: int = 10, col: int = 10) -> None:
         h, w = 28, 28
         img = np.zeros((h * row, w * col))
 
@@ -100,7 +100,7 @@ class MNIST(VisionDataset):
         plt.show()
 
     @staticmethod
-    def label():
+    def label() -> Dict[int, str]:
         labels = {
             0: '0',
             1: '1',
@@ -121,17 +121,24 @@ class MNIST(VisionDataset):
 #########################################################################################
 
 
-def get_data(root: str, url: str, filename: str) -> None:
+def get_data(url: str, root: str, filename: str = None) -> str:
     """
     Download a file from a url if it does not exist in the current directory.
     """
+    if not os.path.exists(root):
+        os.makedirs(root)
+
+    if filename is None:
+        filename = url.split('/')[-1]
     filepath = os.path.join(root, filename)
 
     if not os.path.exists(filepath):
-        print(f"Downloading {filename}...")
-        r = requests.get(url + filename)
-        with open(filepath, 'wb') as f:
-            f.write(r.content)
-        print(f"Downloaded {filename}!")
+        print(f"Downloading: {filename}")
+        r = requests.get(url, stream=True)
+        with open(filepath, 'wb+') as f:
+            for chunk in r.iter_content(chunk_size=16 * 1024):
+                if chunk:
+                    f.write(chunk)
+        print(f"Downloaded: {filename}")
 
     return filepath
