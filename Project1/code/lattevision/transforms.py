@@ -10,15 +10,14 @@ class Compose:
     def __repr__(self) -> str:
         return f'Compose(transforms={self.transforms})'
 
-    def __call__(self, img: Image.Image) -> Image.Image:
+    def __call__(self, img: Image.Image or np.ndarray) -> Image.Image or np.ndarray:
         for transform in self.transforms:
             img = transform(img)
         return img
 
 
 class Transform:
-    def __call__(self, img: Image.Image) -> Image.Image:
-        raise NotImplementedError
+    pass
 
 
 #########################################################################################
@@ -90,13 +89,23 @@ class ToTensor(Transform):
     def __repr__(self) -> str:
         return 'Transform(ToTensor)'
 
-    def __call__(self, img: Image.Image) -> np.ndarray:
-        return np.array(img).transpose((2, 0, 1)) / 255.0
+    def __call__(self, img: Image.Image or np.ndarray) -> np.ndarray:
+        if isinstance(img, Image.Image):
+            img = np.array(img).transpose(2, 0, 1)
+        return img / 255.0
 
 
 #########################################################################################
 #                                         Array                                         #
 #########################################################################################
+
+
+class ToPILImage(Transform):
+    def __repr__(self) -> str:
+        return 'Transform(ToPILImage)'
+
+    def __call__(self, img: np.ndarray) -> Image.Image:
+        return Image.fromarray(img.transpose(1, 2, 0))
 
 
 class Normalize(Transform):
@@ -111,16 +120,16 @@ class Normalize(Transform):
         if np.isscalar(self.mean):
             mean = self.mean
         else:
-            shape = [1 for _ in range(array.ndim)]
-            shape[0] = array.shape[0] if len(self.mean) == 1 else len(self.mean)
-            mean = np.reshape(self.mean, shape)
+            shape_ = [1 for _ in range(array.ndim)]
+            shape_[0] = len(array) if len(self.mean) == 1 else len(self.mean)
+            mean = np.reshape(self.mean, shape_)
 
         if np.isscalar(self.std):
             std = self.std
         else:
-            shape = [1 for _ in range(array.ndim)]
-            shape[0] = array.shape[0] if len(self.std) == 1 else len(self.std)
-            std = np.reshape(self.std, shape)
+            shape_ = [1 for _ in range(array.ndim)]
+            shape_[0] = len(array) if len(self.std) == 1 else len(self.std)
+            std = np.reshape(self.std, shape_)
 
         return (array - mean) / std
 
