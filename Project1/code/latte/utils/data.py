@@ -1,13 +1,16 @@
 import numpy as np
+from typing import Tuple
 
 
 class Dataset:
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
 
 class DataLoader:
-    def __init__(self, dataset: 'Dataset', batch_size: int, shuffle: bool = False):
+    def __init__(
+        self, dataset: 'Dataset', batch_size: int, shuffle: bool = False
+    ) -> None:
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -22,16 +25,21 @@ class DataLoader:
         else:
             self.indices = np.arange(len(self.dataset))
 
-    def __iter__(self):
+    def __iter__(self) -> 'DataLoader':
         return self
 
-    def __next__(self):
+    def __next__(self) -> Tuple[np.ndarray, np.ndarray]:
         if self.iter == self.max_iter:
             self.reset()
             raise StopIteration
         else:
             self.iter += 1
-            indices = self.indices[
+            batch_indices = self.indices[
                 self.iter * self.batch_size : (self.iter + 1) * self.batch_size
             ]
-            return self.dataset[indices]
+            batch = [self.dataset[i] for i in batch_indices]
+
+            batch_data = np.array([x[0] for x in batch])
+            batch_labels = np.array([x[1] for x in batch])
+
+            return batch_data, batch_labels
