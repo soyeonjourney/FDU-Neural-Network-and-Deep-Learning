@@ -180,8 +180,12 @@ class Reshape(Function):
 
     def forward(self, a: 'Tensor', *shape: Tuple[int, ...]) -> 'Tensor':
         self.save_backward_node([a])
+
+        def _backward():
+            self.grad = a.grad.reshape(*shape)
+
         return Tensor(
-            a.data.reshape(*shape), grad_fn=self, requires_grad=a.requires_grad
+            a.data.reshape(*shape), grad_fn=_backward, requires_grad=a.requires_grad
         )
 
     def backward(self, out: np.ndarray) -> None:
