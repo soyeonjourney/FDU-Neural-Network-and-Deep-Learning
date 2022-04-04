@@ -1,10 +1,48 @@
 import numpy as np
-from typing import Tuple
+from typing import List, Tuple, Optional, Generator
+
+
+#########################################################################################
+#                                        Dataset                                        #
+#########################################################################################
 
 
 class Dataset:
-    def __getitem__(self, index) -> Tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, idx) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
+
+
+class Subset(Dataset):
+    def __init__(self, dataset: 'Dataset', indices: List[int]) -> None:
+        self.dataset = dataset
+        self.indices = indices
+
+    def __getitem__(self, idx):
+        if np.isscalar:
+            return self.dataset[self.indices[idx]]
+        else:
+            return [self.dataset[i] for i in idx]
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+
+def random_split(dataset: 'Dataset', lengths: List[int]) -> List['Dataset']:
+    if np.sum(lengths) != len(dataset):
+        raise ValueError(
+            "Sum of input lengths does not equal the length of the input dataset!"
+        )
+
+    indices = np.random.permutation(len(dataset)).tolist()
+    return [
+        Subset(dataset, indices[offset - length : offset])
+        for offset, length in zip(np.cumsum(lengths), lengths)
+    ]
+
+
+#########################################################################################
+#                                      Data Loader                                      #
+#########################################################################################
 
 
 class DataLoader:
@@ -43,3 +81,6 @@ class DataLoader:
             batch_labels = np.array([x[1] for x in batch])
 
             return batch_data, batch_labels
+
+    def next(self):
+        return self.__next__()
