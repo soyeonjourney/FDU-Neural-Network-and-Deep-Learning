@@ -29,7 +29,8 @@ class SGD(Optimizer):
     def step(self) -> None:
         for param, v in zip(self.params, self.v):
             v = self.momentum * v + self.lr * param.grad
-            param.data -= v
+            # `param.data -= v` is not broadcastable
+            param.data = param.data - v
 
 
 class Adam(Optimizer):
@@ -52,7 +53,9 @@ class Adam(Optimizer):
     def step(self) -> None:
         self.t += 1
         lr_t = self.lr * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
+        eps = self.eps * self.t ** 0.5
         for param, m, v in zip(self.params, self.m, self.v):
             m = self.beta1 * m + (1 - self.beta1) * param.grad
             v = self.beta2 * v + (1 - self.beta2) * param.grad ** 2
-            param.data -= lr_t * m / (np.sqrt(v) + self.eps)
+            # `param.data -= lr_t * m / (np.sqrt(v) + eps)` is not broadcastable
+            param.data = param.data - lr_t * m / (np.sqrt(v) + eps)
