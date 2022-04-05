@@ -4,9 +4,12 @@ from latte.tensor import Tensor
 
 
 class Optimizer:
-    def __init__(self, params: List['Tensor'], lr: float = 1e-3) -> None:
+    def __init__(
+        self, params: List['Tensor'], lr: float = 1e-3, weight_decay: float = 0.0
+    ) -> None:
         self.params = params
         self.lr = lr
+        self.weight_decay = weight_decay
 
     def zero_grad(self) -> None:
         for param in self.params:
@@ -20,9 +23,13 @@ class SGD(Optimizer):
     """SGD with momentum."""
 
     def __init__(
-        self, params: List['Tensor'], lr: float = 1e-3, momentum: float = 0.9
+        self,
+        params: List['Tensor'],
+        lr: float = 1e-3,
+        momentum: float = 0.9,
+        weight_decay: float = 0.0,
     ) -> None:
-        super(SGD, self).__init__(params, lr)
+        super(SGD, self).__init__(params, lr, weight_decay)
         self.momentum = momentum
         self.v = [np.zeros(param.shape) for param in self.params]
 
@@ -30,7 +37,11 @@ class SGD(Optimizer):
         for param, v in zip(self.params, self.v):
             v = self.momentum * v + self.lr * param.grad
             # `param.data -= v` is not broadcastable
-            param.data = param.data - v
+            param.data = (
+                param.data
+                - v
+                + self.weight_decay * param.data / np.linalg.norm(param.data, ord='fro')
+            )
 
 
 class Adam(Optimizer):
@@ -38,11 +49,12 @@ class Adam(Optimizer):
         self,
         params: List['Tensor'],
         lr: float = 1e-3,
+        weight_decay: float = 0.0,
         beta1: float = 0.9,
         beta2: float = 0.999,
         eps: float = 1e-8,
     ) -> None:
-        super(Adam, self).__init__(params, lr)
+        super(Adam, self).__init__(params, lr, weight_decay)
         self.beta1 = beta1
         self.beta2 = beta2
         self.m = [np.zeros(param.shape) for param in self.params]
@@ -58,4 +70,8 @@ class Adam(Optimizer):
             m = self.beta1 * m + (1 - self.beta1) * param.grad
             v = self.beta2 * v + (1 - self.beta2) * param.grad ** 2
             # `param.data -= lr_t * m / (np.sqrt(v) + eps)` is not broadcastable
-            param.data = param.data - lr_t * m / (np.sqrt(v) + eps)
+            param.data = (
+                param.data
+                - lr_t * m / (np.sqrt(v) + eps)
+                + self.weight_decay * param.data / np.linalg.norm(param.data, ord='fro')
+            )
