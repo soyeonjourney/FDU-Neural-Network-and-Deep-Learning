@@ -1,5 +1,4 @@
 import numpy as np
-from PIL import Image
 from typing import List, Tuple
 
 
@@ -10,102 +9,122 @@ class Compose:
     def __repr__(self) -> str:
         return f'Compose(transforms={self.transforms})'
 
-    def __call__(self, img: Image.Image or np.ndarray) -> Image.Image or np.ndarray:
+    def __call__(self, img: np.ndarray or np.ndarray) -> np.ndarray or np.ndarray:
         for transform in self.transforms:
             img = transform(img)
         return img
 
 
 class Transform:
-    pass
+    def __call__(self, img: np.ndarray) -> np.ndarray:
+        return self.transform(img)
 
-
-#########################################################################################
-#                                         Image                                         #
-#########################################################################################
+    def transform(self, img: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
 
 
 class Resize(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
         if np.isscalar(size):
-            self.size = (size, size)
+            self.h = self.w = size
         else:
-            self.size = size
+            self.h, self.w = size
 
     def __repr__(self) -> str:
         return f'Transform(Resize(size={self.size}))'
 
-    def __call__(self, img: Image.Image) -> Image.Image:
-        return img.resize(self.size)
+    def transform(self, img: np.ndarray) -> np.ndarray:
+        c, h, w = img.shape
+        img_rsz = np.zeros((c, self.h, self.w))
+        for row in range(self.h):
+            for col in range(self.w):
+                img_rsz[:, row, col] = bilinear_interpolate(
+                    img, (row / self.h * h, col / self.w * w)
+                )
+
+        return img_rsz
 
 
 class CenterCrop(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
         if np.isscalar(size):
-            self.size = (size, size)
+            self.h = self.w = size
         else:
-            self.size = size
+            self.h, self.w = size
 
     def __repr__(self) -> str:
         return f'Transform(CenterCrop(size={self.size}))'
 
-    def __call__(self, img: Image.Image) -> Image.Image:
-        w, h = img.size
-        tw, th = self.size, self.size
-        if w == tw and h == th:
+    def transform(self, img: np.ndarray) -> np.ndarray:
+        c, h, w = img.shape
+        if self.h == h and self.w == w:
             return img
+        elif self.h > h or self.w > w:
+            resize_fn = Resize((self.h, self.w))
+            return resize_fn(img)
         else:
-            left = (w - tw) // 2
-            top = (h - th) // 2
-            right = left + tw
-            bottom = top + th
-            return img.crop((left, top, right, bottom))
+            row0 = (h - self.h) // 2
+            col0 = (w - self.w) // 2
+            row1 = row0 + self.h
+            col1 = col0 + self.w
+            return img[:, row0:row1, col0:col1]
 
 
 class RandomResizedCrop(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
         if np.isscalar(size):
-            self.size = (size, size)
+            self.h = self.w = size
         else:
-            self.size = size
+            self.h, self.w = size
 
     def __repr__(self) -> str:
         return f'Transform(RandomResizedCrop(size={self.size}))'
 
-    def __call__(self, img: Image.Image) -> Image.Image:
-        w, h = img.size
-        th, tw = self.size, self.size
-        if w == tw and h == th:
+    def transform(self, img: np.ndarray) -> np.ndarray:
+        c, h, w = img.shape
+        if self.h == h and self.w == w:
             return img
-        elif w < tw or h < th:
-            return img.resize((tw, th))
+        elif self.h > h or self.w > w:
+            resize_fn = Resize((self.h, self.w))
+            return resize_fn(img)
         else:
-            x1 = np.random.randint(0, w - tw)
-            y1 = np.random.randint(0, h - th)
-            return img.crop((x1, y1, x1 + tw, y1 + th))
+            row0 = np.random.randint(0, h - self.h)
+            col0 = np.random.randint(0, w - self.w)
+            return img[:, row0 : row0 + self.h, col0 : col0 + self.w]
+
+
+class RandomRotation(Transform):
+    """Conter-clockwise rotation is positive, clockwise is negative."""
+
+    def __init__(self, radians: Tuple[float, ...] = None) -> None:
+        self.radians = radians if radians else (-np.pi / 12, np.pi / 12)
+
+    def __repr__(self) -> str:
+        return f'Transform(RandomRotation(radians={self.radians}))'
+
+    def transform(self, img: np.ndarray) -> np.ndarray:
+        c, h, w = img.shape
+        theta = np.random.uniform(*self.radians)
+        img_rot = np.zeros((c, h, w))
+
+        center = (h // 2, w // 2)
+        for row in range(h):
+            for col in range(w):
+                rho = np.sqrt((row - center[0]) ** 2 + (col - center[1]) ** 2)
+                phi = np.arctan2(row - center[0], col - center[1]) + theta
+                row_pre = rho * np.sin(phi) + center[0]
+                col_pre = rho * np.cos(phi) + center[1]
+                img_rot[:, row, col] = bilinear_interpolate(img, (row_pre, col_pre))
+
+        return img_rot
 
 
 class ToTensor(Transform):
     def __repr__(self) -> str:
         return 'Transform(ToTensor)'
 
-    def __call__(self, img: Image.Image or np.ndarray) -> np.ndarray:
-        if isinstance(img, Image.Image):
-            img = np.array(img).transpose(2, 0, 1)
+    def transform(self, img: np.ndarray) -> np.ndarray:
         return img / 255.0
-
-
-#########################################################################################
-#                                         Array                                         #
-#########################################################################################
-
-
-class ToPILImage(Transform):
-    def __repr__(self) -> str:
-        return 'Transform(ToPILImage)'
-
-    def __call__(self, img: np.ndarray) -> Image.Image:
-        return Image.fromarray(img.transpose(1, 2, 0))
 
 
 class Normalize(Transform):
@@ -116,27 +135,43 @@ class Normalize(Transform):
     def __repr__(self) -> str:
         return f'Transform(Normalize(mean={self.mean}, std={self.std}))'
 
-    def __call__(self, array: np.ndarray) -> np.ndarray:
+    def transform(self, img: np.ndarray) -> np.ndarray:
         if np.isscalar(self.mean):
             mean = self.mean
         else:
-            shape_ = [1 for _ in range(array.ndim)]
-            shape_[0] = len(array) if len(self.mean) == 1 else len(self.mean)
+            shape_ = [1 for _ in range(img.ndim)]
+            shape_[0] = len(img) if len(self.mean) == 1 else len(self.mean)
             mean = np.reshape(self.mean, shape_)
 
         if np.isscalar(self.std):
             std = self.std
         else:
-            shape_ = [1 for _ in range(array.ndim)]
-            shape_[0] = len(array) if len(self.std) == 1 else len(self.std)
+            shape_ = [1 for _ in range(img.ndim)]
+            shape_[0] = len(img) if len(self.std) == 1 else len(self.std)
             std = np.reshape(self.std, shape_)
 
-        return (array - mean) / std
+        return (img - mean) / std
 
 
-class Flatten(Transform):
-    def __repr__(self) -> str:
-        return 'Transform(Flatten)'
+def bilinear_interpolate(img: np.ndarray, index: Tuple[float, float]) -> np.ndarray:
+    h, w = img.shape[1:]
+    row, col = index
+    row0 = int(row)
+    row1 = row0 + 1
+    col0 = int(col)
+    col1 = col0 + 1
 
-    def __call__(self, array: np.ndarray) -> np.ndarray:
-        return array.flatten()
+    if row0 < 0 or row1 > w - 1 or col0 < 0 or col1 > h - 1:
+        return 0
+
+    row0_ratio = row - row0
+    row1_ratio = 1 - row0_ratio
+    col0_ratio = col - col0
+    col1_ratio = 1 - col0_ratio
+
+    return (
+        img[:, row0, col0] * row0_ratio * col0_ratio
+        + img[:, row0, col1] * row1_ratio * col0_ratio
+        + img[:, row1, col0] * row0_ratio * col1_ratio
+        + img[:, row1, col1] * row1_ratio * col1_ratio
+    )
