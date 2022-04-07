@@ -2,6 +2,11 @@ import numpy as np
 from typing import List, Tuple
 
 
+#########################################################################################
+#                                        Tensor                                         #
+#########################################################################################
+
+
 class Tensor:
     def __init__(
         self,
@@ -126,8 +131,9 @@ class Add(Function):
 
     def backward(self, out: np.ndarray) -> None:
         a, b = self.prev
-        a.grad = out
-        b.grad = out
+        a_grad, b_grad = out, out
+        a.grad = sum_to_shape(a_grad, a.shape)
+        b.grad = sum_to_shape(b_grad, b.shape)
 
 
 class Neg(Function):
@@ -157,8 +163,9 @@ class Sub(Function):
 
     def backward(self, out: np.ndarray) -> None:
         a, b = self.prev
-        a.grad = out
-        b.grad = -out
+        a_grad, b_grad = out, -out
+        a.grad = sum_to_shape(a_grad, a.shape)
+        b.grad = sum_to_shape(b_grad, b.shape)
 
 
 class Dot(Function):
@@ -196,3 +203,33 @@ class Reshape(Function):
     def backward(self, out: np.ndarray) -> None:
         a = self.prev[0]
         a.grad = out.reshape(a.shape)
+
+
+#########################################################################################
+#                                        Utility                                        #
+#########################################################################################
+
+
+def sum_to_shape(array: np.ndarray, shape: Tuple[int, ...]) -> np.ndarray:
+    """
+    Sums the elements of an array to the given shape.
+    """
+    dim_diff = array.ndim - len(shape)
+    if dim_diff < 0:
+        raise ValueError(f'Shape {shape} is smaller than array {array}')
+
+    else:
+        sum_axis = tuple(
+            [
+                dim_idx + dim_diff
+                for dim_idx, dim_val in enumerate(shape)
+                if dim_val == 1
+            ]
+        )
+        sqz_axis = tuple(range(dim_diff))
+        output = np.sum(array, axis=sum_axis + sqz_axis, keepdims=True)
+
+        if dim_diff > 0:
+            output = output.squeeze(axis=sqz_axis)
+
+        return output

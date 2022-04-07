@@ -38,7 +38,6 @@ class SGD(Optimizer):
             v = self.momentum * v + self.lr * param.grad
 
             if not param.is_bias:
-                # `param.data -= v` is not broadcastable
                 param.data = (
                     param.data
                     - v
@@ -78,7 +77,6 @@ class Adam(Optimizer):
             v = self.beta2 * v + (1 - self.beta2) * param.grad ** 2
 
             if not param.is_bias:
-                # `param.data -= lr_t * m / (np.sqrt(v) + eps)` is not broadcastable
                 param.data = (
                     param.data
                     - lr_t * m / (np.sqrt(v) + eps)
