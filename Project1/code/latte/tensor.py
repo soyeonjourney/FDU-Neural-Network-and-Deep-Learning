@@ -4,12 +4,17 @@ from typing import List, Tuple
 
 class Tensor:
     def __init__(
-        self, data: np.ndarray, grad_fn: 'Function' = None, requires_grad: bool = False
+        self,
+        data: np.ndarray,
+        grad_fn: 'Function' = None,
+        requires_grad: bool = False,
+        is_bias: bool = False,  # Notation for bias, not official
     ) -> None:
         self.data = data
         self.grad = None
         self.grad_fn = grad_fn
         self.requires_grad = requires_grad
+        self.is_bias = is_bias
 
     def __repr__(self) -> str:
         if self.data is None:
