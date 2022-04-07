@@ -210,6 +210,7 @@ class Reshape(Function):
 #########################################################################################
 
 
+# Avoid bias.grad broadcast unexpectedly
 def sum_to_shape(array: np.ndarray, shape: Tuple[int, ...]) -> np.ndarray:
     """
     Sums the elements of an array to the given shape.
