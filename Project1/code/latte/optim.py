@@ -29,19 +29,26 @@ class SGD(Optimizer):
         momentum: float = 0.9,
         weight_decay: float = 0.0,
     ) -> None:
-        super(SGD, self).__init__(params, lr, weight_decay)
+        super().__init__(params, lr, weight_decay)
         self.momentum = momentum
         self.v = [np.zeros(param.shape) for param in self.params]
 
     def step(self) -> None:
         for param, v in zip(self.params, self.v):
             v = self.momentum * v + self.lr * param.grad
-            # `param.data -= v` is not broadcastable
-            param.data = (
-                param.data
-                - v
-                + self.weight_decay * param.data / np.linalg.norm(param.data, ord='fro')
-            )
+
+            if not param.is_bias:
+                # `param.data -= v` is not broadcastable
+                param.data = (
+                    param.data
+                    - v
+                    - self.weight_decay
+                    * param.data
+                    / np.linalg.norm(param.data, ord='fro')
+                )
+            # Bias is not regularized
+            else:
+                param.data = param.data - v
 
 
 class Adam(Optimizer):
@@ -54,7 +61,7 @@ class Adam(Optimizer):
         beta2: float = 0.999,
         eps: float = 1e-8,
     ) -> None:
-        super(Adam, self).__init__(params, lr, weight_decay)
+        super().__init__(params, lr, weight_decay)
         self.beta1 = beta1
         self.beta2 = beta2
         self.m = [np.zeros(param.shape) for param in self.params]
@@ -69,9 +76,16 @@ class Adam(Optimizer):
         for param, m, v in zip(self.params, self.m, self.v):
             m = self.beta1 * m + (1 - self.beta1) * param.grad
             v = self.beta2 * v + (1 - self.beta2) * param.grad ** 2
-            # `param.data -= lr_t * m / (np.sqrt(v) + eps)` is not broadcastable
-            param.data = (
-                param.data
-                - lr_t * m / (np.sqrt(v) + eps)
-                + self.weight_decay * param.data / np.linalg.norm(param.data, ord='fro')
-            )
+
+            if not param.is_bias:
+                # `param.data -= lr_t * m / (np.sqrt(v) + eps)` is not broadcastable
+                param.data = (
+                    param.data
+                    - lr_t * m / (np.sqrt(v) + eps)
+                    - self.weight_decay
+                    * param.data
+                    / np.linalg.norm(param.data, ord='fro')
+                )
+            # Bias is not regularized
+            else:
+                param.data = param.data - lr_t * m / (np.sqrt(v) + eps)
