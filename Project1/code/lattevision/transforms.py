@@ -2,6 +2,11 @@ import numpy as np
 from typing import List, Tuple
 
 
+#########################################################################################
+#                                       Transform                                       #
+#########################################################################################
+
+
 class Compose:
     def __init__(self, transforms: List['Transform']) -> None:
         self.transforms = transforms
@@ -25,10 +30,7 @@ class Transform:
 
 class Resize(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
-        if np.isscalar(size):
-            self.h = self.w = size
-        else:
-            self.h, self.w = size
+        self.h, self.w = _pair(size)
 
     def __repr__(self) -> str:
         return f'Transform(Resize(size={self.size}))'
@@ -47,10 +49,7 @@ class Resize(Transform):
 
 class CenterCrop(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
-        if np.isscalar(size):
-            self.h = self.w = size
-        else:
-            self.h, self.w = size
+        self.h, self.w = _pair(size)
 
     def __repr__(self) -> str:
         return f'Transform(CenterCrop(size={self.size}))'
@@ -72,10 +71,7 @@ class CenterCrop(Transform):
 
 class RandomResizedCrop(Transform):
     def __init__(self, size: Tuple[int, ...]) -> None:
-        if np.isscalar(size):
-            self.h = self.w = size
-        else:
-            self.h, self.w = size
+        self.h, self.w = _pair(size)
 
     def __repr__(self) -> str:
         return f'Transform(RandomResizedCrop(size={self.size}))'
@@ -151,6 +147,19 @@ class Normalize(Transform):
             std = np.reshape(self.std, shape_)
 
         return (img - mean) / std
+
+
+#########################################################################################
+#                                        Utility                                        #
+#########################################################################################
+
+
+def _pair(x):
+    if np.isscalar(x):
+        return x, x
+    else:
+        assert len(x) == 2, "x must be a scalar or a pair"
+        return x
 
 
 def bilinear_interpolate(img: np.ndarray, index: Tuple[float, float]) -> np.ndarray:
