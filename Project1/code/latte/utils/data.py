@@ -8,7 +8,7 @@ from typing import List, Tuple
 
 
 class Dataset:
-    def __getitem__(self, idx) -> Tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, index) -> Tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
 
@@ -17,11 +17,11 @@ class Subset(Dataset):
         self.dataset = dataset
         self.indices = indices
 
-    def __getitem__(self, idx):
-        if np.isscalar:
-            return self.dataset[self.indices[idx]]
+    def __getitem__(self, index):
+        if np.isscalar(index):
+            return self.dataset[self.indices[index]]
         else:
-            return [self.dataset[i] for i in idx]
+            return [self.dataset[i] for i in index]
 
     def __len__(self) -> int:
         return len(self.indices)
