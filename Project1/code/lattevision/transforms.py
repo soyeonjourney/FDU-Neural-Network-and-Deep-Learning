@@ -170,7 +170,7 @@ def bilinear_interpolate(img: np.ndarray, index: Tuple[float, float]) -> np.ndar
     col0 = int(col)
     col1 = col0 + 1
 
-    if row0 < 0 or row1 > w - 1 or col0 < 0 or col1 > h - 1:
+    if row0 < 0 or row1 > h - 1 or col0 < 0 or col1 > w - 1:
         return 0
 
     row0_ratio = row - row0
