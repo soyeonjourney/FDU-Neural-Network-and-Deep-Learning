@@ -32,4 +32,4 @@ from .resnext import (
     ResNeXt29_8x64d,
     ResNeXt29_32x4d,
 )
-from .wide_resnet import WideResNet16_8
+from .wide_resnet import WideResNet28x10
