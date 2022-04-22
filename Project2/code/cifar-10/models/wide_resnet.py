@@ -33,7 +33,7 @@ class WideBasic(nn.Module):
 
 
 class WideResNet(nn.Module):
-    def __init__(self, block, depth=50, widen_factor=1, num_classes=10):
+    def __init__(self, block, depth, widen_factor, num_classes=10):
         super().__init__()
 
         self.depth = depth
@@ -84,6 +84,10 @@ class WideResNet(nn.Module):
             self.in_channels = out_channels
 
         return nn.Sequential(*layers)
+
+
+def WideResNet16x8():
+    return WideResNet(WideBasic, 16, 8)
 
 
 def WideResNet28x10():
