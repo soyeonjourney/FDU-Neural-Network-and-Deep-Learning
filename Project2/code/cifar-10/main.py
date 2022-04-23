@@ -97,7 +97,7 @@ if args.resume:
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, mode='min', factor=0.5, patience=5, cooldown=3, min_lr=1e-6
+    optimizer, mode='min', factor=0.5, patience=5, cooldown=5, min_lr=1e-6
 )
 
 
