@@ -24,7 +24,7 @@ parser.add_argument(
     default='ResNet18',
     type=str,
     help="ResNet18, ResNet50, PreActResNet18, ResNeXt29_32x4d, ResNeXt29_2x64d, \
-        WideResNet28x10, DenseNet121, DPN92, DLA",
+        WideResNet28x10, DenseNet121, DPN26, DLA",
 )
 parser.add_argument('--lr', default=0.1, type=float, help="Learning rate")
 parser.add_argument('--max-epoch', default=200, type=int, help="Max training epochs")
@@ -155,7 +155,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoints'):
             os.mkdir('checkpoints')
-        torch.save(state, f'./checkpoints/checkpoint_{args.model}.pth')
+        torch.save(state, f'./checkpoints/checkpoint_{args.model.lower()}.pth')
         best_acc = epoch_acc
 
     return epoch_loss, epoch_acc
@@ -215,4 +215,4 @@ plt.xlabel('Epoch')
 
 if not os.path.isdir('log'):
     os.mkdir('log')
-plt.savefig(f'./log/{args.model}.png')
+plt.savefig(f'./log/{args.model.lower()}.png')
