@@ -82,7 +82,7 @@ classes = (
 print(f"==> Using model {args.model}")
 net = getattr(models, args.model)().to(device)
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
+    net = nn.DataParallel(net)
     cudnn.benchmark = True
 
 if args.resume:
