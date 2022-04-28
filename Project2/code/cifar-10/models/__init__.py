@@ -26,10 +26,14 @@ from .resnet import (
     ResNet152,
 )
 from .resnext import (
-    ResNeXt,
+    ResNeXt_3,
+    ResNeXt_4,
     ResNeXt29_2x64d,
     ResNeXt29_4x64d,
     ResNeXt29_8x64d,
     ResNeXt29_32x4d,
+    ResNeXt50_2x40d,
+    ResNeXt50_8x14d,
+    ResNeXt50_32x4d,
 )
 from .wide_resnet import WideResNet16x8, WideResNet28x10

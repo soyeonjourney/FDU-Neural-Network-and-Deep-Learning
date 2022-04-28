@@ -50,9 +50,9 @@ class Block(nn.Module):
         return out
 
 
-class ResNeXt(nn.Module):
+class ResNeXt_3(nn.Module):
     def __init__(self, num_blocks, cardinality, bottleneck_width, num_classes=10):
-        super(ResNeXt, self).__init__()
+        super(ResNeXt_3, self).__init__()
         self.cardinality = cardinality
         self.bottleneck_width = bottleneck_width
         self.in_planes = 64
@@ -62,7 +62,6 @@ class ResNeXt(nn.Module):
         self.layer1 = self._make_layer(num_blocks[0], 1)
         self.layer2 = self._make_layer(num_blocks[1], 2)
         self.layer3 = self._make_layer(num_blocks[2], 2)
-        # self.layer4 = self._make_layer(num_blocks[3], 2)
         self.linear = nn.Linear(cardinality * bottleneck_width * 8, num_classes)
 
     def _make_layer(self, num_blocks, stride):
@@ -82,24 +81,74 @@ class ResNeXt(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        # out = self.layer4(out)
         out = F.avg_pool2d(out, 8)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
 
 
+class ResNeXt_4(nn.Module):
+    def __init__(self, num_blocks, cardinality, bottleneck_width, num_classes=10):
+        super(ResNeXt_4, self).__init__()
+        self.cardinality = cardinality
+        self.bottleneck_width = bottleneck_width
+        self.in_planes = 64
+
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(num_blocks[0], 1)
+        self.layer2 = self._make_layer(num_blocks[1], 2)
+        self.layer3 = self._make_layer(num_blocks[2], 2)
+        self.layer4 = self._make_layer(num_blocks[3], 2)
+        self.linear = nn.Linear(cardinality * bottleneck_width * 16, num_classes)
+
+    def _make_layer(self, num_blocks, stride):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.append(
+                Block(self.in_planes, self.cardinality, self.bottleneck_width, stride)
+            )
+            self.in_planes = Block.expansion * self.cardinality * self.bottleneck_width
+        # Increase bottleneck_width by 2 after each stage.
+        self.bottleneck_width *= 2
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out)
+        return out
+
+
 def ResNeXt29_2x64d():
-    return ResNeXt(num_blocks=[3, 3, 3], cardinality=2, bottleneck_width=64)
+    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=2, bottleneck_width=64)
 
 
 def ResNeXt29_4x64d():
-    return ResNeXt(num_blocks=[3, 3, 3], cardinality=4, bottleneck_width=64)
+    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=4, bottleneck_width=64)
 
 
 def ResNeXt29_8x64d():
-    return ResNeXt(num_blocks=[3, 3, 3], cardinality=8, bottleneck_width=64)
+    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=8, bottleneck_width=64)
 
 
 def ResNeXt29_32x4d():
-    return ResNeXt(num_blocks=[3, 3, 3], cardinality=32, bottleneck_width=4)
+    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=32, bottleneck_width=4)
+
+
+def ResNeXt50_2x40d():
+    return ResNeXt_4(num_blocks=[3, 4, 6, 3], cardinality=2, bottleneck_width=40)
+
+
+def ResNeXt50_8x14d():
+    return ResNeXt_4(num_blocks=[3, 4, 6, 3], cardinality=8, bottleneck_width=14)
+
+
+def ResNeXt50_32x4d():
+    return ResNeXt_4(num_blocks=[3, 4, 6, 3], cardinality=32, bottleneck_width=4)
