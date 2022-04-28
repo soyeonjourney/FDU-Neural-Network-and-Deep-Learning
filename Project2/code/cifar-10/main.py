@@ -26,6 +26,7 @@ parser.add_argument(
     help="ResNet18, ResNet50, PreActResNet18, ResNeXt29_32x4d, ResNeXt29_2x64d, \
         WideResNet28x10, DenseNet121, DPN26, DLA",
 )
+parser.add_argument('--batch-size', type=int, default=128, help='Training batch size')
 parser.add_argument('--lr', default=0.1, type=float, help="Learning rate")
 parser.add_argument('--max-epoch', default=200, type=int, help="Max training epochs")
 args = parser.parse_args()
@@ -52,7 +53,7 @@ transform_test = T.Compose(
 train_set = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train
 )
-train_batch_size = 128
+train_batch_size = args.batch_size
 train_loader = torch.utils.data.DataLoader(
     train_set, batch_size=train_batch_size, shuffle=True, num_workers=2
 )
