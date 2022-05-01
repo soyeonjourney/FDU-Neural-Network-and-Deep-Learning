@@ -28,8 +28,8 @@ from .resnet import (
 from .resnext import (
     ResNeXt_3,
     ResNeXt_4,
+    ResNeXt29_2x32d,
     ResNeXt29_2x64d,
-    ResNeXt29_4x64d,
     ResNeXt29_8x64d,
     ResNeXt29_32x4d,
     ResNeXt50_2x40d,

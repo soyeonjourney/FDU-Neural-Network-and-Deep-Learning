@@ -126,12 +126,12 @@ class ResNeXt_4(nn.Module):
         return out
 
 
+def ResNeXt29_2x32d():
+    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=2, bottleneck_width=32)
+
+
 def ResNeXt29_2x64d():
     return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=2, bottleneck_width=64)
-
-
-def ResNeXt29_4x64d():
-    return ResNeXt_3(num_blocks=[3, 3, 3], cardinality=4, bottleneck_width=64)
 
 
 def ResNeXt29_8x64d():
