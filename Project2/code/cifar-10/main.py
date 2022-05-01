@@ -13,6 +13,7 @@ import os
 import argparse
 
 import models
+import augmentation as aug
 
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
@@ -29,6 +30,7 @@ parser.add_argument(
 parser.add_argument('--batch-size', type=int, default=128, help='Training batch size')
 parser.add_argument('--lr', default=0.1, type=float, help="Learning rate")
 parser.add_argument('--max-epoch', default=200, type=int, help="Max training epochs")
+parser.add_argument('--use-cutout', action='store_true', help="Use cutout augmentation")
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -37,14 +39,25 @@ start_epoch = 0  # Start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data...')
-transform_train = T.Compose(
-    [
-        T.RandomCrop(32, padding=4),
-        T.RandomHorizontalFlip(),
-        T.ToTensor(),
-        T.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
-    ]
-)
+if not args.use_cutout:
+    transform_train = T.Compose(
+        [
+            T.RandomCrop(32, padding=4),
+            T.RandomHorizontalFlip(),
+            T.ToTensor(),
+            T.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
+        ]
+    )
+else:
+    transform_train = T.Compose(
+        [
+            T.RandomCrop(32, padding=4),
+            T.RandomHorizontalFlip(),
+            aug.Cutout(p=1, half_size=8),
+            T.ToTensor(),
+            T.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
+        ]
+    )
 
 transform_test = T.Compose(
     [T.ToTensor(), T.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]
