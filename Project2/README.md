@@ -3,7 +3,6 @@
 ## TOC
 
 - [Prerequisites](#Prerequisites)
-
 - [CIFAR](#CIFAR)
 - [BatchNorm](#BatchNorm)
 - [DessiLBI](#DessiLBI)
@@ -82,15 +81,6 @@ Wide ResNet 28-10
 
 ## BatchNorm
 
-$$
-\begin{gathered}
-\mu_{\mathcal{B}}=\frac{1}{m} \sum_{i=1}^{m} x_{i} \\
-\sigma_{\mathcal{B}}^{2}=\frac{1}{m} \sum_{i=1}^{m}\left(x_{i}-\mu_{B}\right)^{2} \\
-\hat{x}_{i}=\frac{x_{i}-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^{2}+\epsilon}} \\
-y_{i}=\gamma \hat{x}_{i}+\beta=\mathrm{BN}_{\gamma, \beta}\left(x_{i}\right)
-\end{gathered}
-$$
-
 ### Usage
 
 Run script
@@ -119,4 +109,5 @@ nohup bash train.sh > nohup.out &
 
 1. [Train CIFAR-10 with PyTorch](https://github.com/kuangliu/pytorch-cifar) 
 2. [Paper Review](https://sh-tsang.medium.com/overview-my-reviewed-paper-lists-tutorials-946ce59fbf9e) 
-2. [Grad CAM on CIFAR-10](Grad Class Activation Map) 
+3. [Grad CAM on CIFAR-10](https://github.com/rashutyagi/Applying-Grad_CAM-) 
+
