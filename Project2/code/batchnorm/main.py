@@ -69,6 +69,7 @@ def train(
     dists = []  # Distance between two gradients
     betas = []  # Beta smoothness
     grad_pre = None  # Previous gradient
+    weight_pre = None  # Previous weight
 
     model.to(device)
 
@@ -76,9 +77,6 @@ def train(
         print(f'Epoch {epoch + 1}/{num_epochs}')
         # Training
         model.train()
-
-        if scheduler is not None:
-            scheduler.step()
 
         total, correct = 0, 0
         for data, target in train_loader:
@@ -97,12 +95,16 @@ def train(
             # Epoch logging
             losses.append(loss.item())
             grad = model.classifier[-1].weight.grad.detach().clone()
+            weight = model.classifier[-1].weight.detach().clone()
             if grad_pre is not None:
-                dist = torch.dist(grad, grad_pre).item()
-                dists.append(dist)
-                beta = dist / (optimizer.param_groups[0]['lr'] * torch.norm(grad_pre))
+                grad_dist = torch.dist(grad, grad_pre).item()
+                dists.append(grad_dist)
+            if weight_pre is not None:
+                weight_dist = torch.dist(weight, weight_pre).item()
+                beta = grad_dist / weight_dist
                 betas.append(beta)
             grad_pre = grad
+            weight_pre = weight
 
         # Training accuracy
         train_accuracies.append(correct / total)
@@ -111,13 +113,17 @@ def train(
         val_accuracy = validate(model, val_loader)
         val_accuracies.append(val_accuracy)
 
+        # Learning rate scheduler
+        if scheduler is not None:
+            scheduler.step()
+
     return train_accuracies, val_accuracies, losses, dists, betas
 
 
 # Use this function to plot the final grad dist landscape,
 # fill the area between the two curves can use plt.fill_between()
 def plot_landscape(
-    vgg_max, vgg_min, vggbn_max, vggbn_min, xlabel, ylabel, title, interval=50
+    vgg_max, vgg_min, vggbn_max, vggbn_min, xlabel, ylabel, title, interval=40
 ):
     steps = np.arange(0, len(vgg_max), interval)
     vgg_max = vgg_max[steps]
@@ -145,7 +151,7 @@ def plot_landscape(
 
 
 max_epochs = 20
-lrs = [1e-3, 5e-4, 1e-4]
+lrs = [2e-3, 1e-3, 5e-4, 1e-4]
 set_random_seeds(seed_value=42, device=device)
 
 vgg_train, vgg_val, vgg_losses, vgg_dists, vgg_betas = [], [], [], [], []
@@ -227,7 +233,7 @@ plot_landscape(
 vgg_max = np.max(vgg_betas, axis=0)
 vggbn_max = np.max(vggbn_betas, axis=0)
 
-steps = np.arange(0, len(vgg_max), 100)
+steps = np.arange(0, len(vgg_max), 40)
 vgg_max = vgg_max[steps]
 vggbn_max = vggbn_max[steps]
 plt.figure(figsize=(12, 9))
