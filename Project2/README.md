@@ -76,8 +76,8 @@ Using Grad Class Activation Map (Grad-CAM), check [notebook](./code/cifar-10/gra
 
 Wide ResNet 28-10
 
-- Test Acc: [96.65%](./code/cifar-10/log/final-200ep/wideresnet28x10.txt) 
-- Training Process: [img](./code/cifar-10/log/final-200ep/wideresnet28x10.png) 
+- Test Acc: [96.65%](./code/cifar-10/log/best-200ep/wideresnet28x10.txt) 
+- Training Process: [img](./code/cifar-10/log/best-200ep/wideresnet28x10.png) 
 
 ## BatchNorm
 
