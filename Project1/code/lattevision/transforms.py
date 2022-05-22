@@ -14,7 +14,7 @@ class Compose:
     def __repr__(self) -> str:
         return f'Compose(transforms={self.transforms})'
 
-    def __call__(self, img: np.ndarray or np.ndarray) -> np.ndarray or np.ndarray:
+    def __call__(self, img: np.ndarray) -> np.ndarray:
         for transform in self.transforms:
             img = transform(img)
         return img
