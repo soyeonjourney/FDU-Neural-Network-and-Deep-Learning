@@ -2,3 +2,6 @@
 	path = Project2/code/dessilbi
 	url = https://github.com/huakyouin/DessiBLI.git
 	branch = main
+[submodule "dnoc"]
+	path = Project3/code
+	url = https://github.com/Tequila-Sunrise/Decoupled-Novel-Object-Captioner.git
