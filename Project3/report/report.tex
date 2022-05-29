@@ -1,0 +1,550 @@
+\documentclass[a4paper, 11pt]{article} % Uses article class in A4 format
+
+%----------------------------------------------------------------------------------------
+%	FORMATTING
+%----------------------------------------------------------------------------------------
+
+\addtolength{\hoffset}{-2.25cm}
+\addtolength{\textwidth}{4.5cm}
+\addtolength{\voffset}{-3.25cm}
+\addtolength{\textheight}{5cm}
+\setlength{\parskip}{1.5ex}
+\setlength{\parindent}{0em}
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\usepackage{charter} % Use the Charter font
+\usepackage[utf8]{inputenc} % Use UTF-8 encoding
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+
+\usepackage{amsthm, amsmath, amssymb} % Mathematical typesetting
+\usepackage{float} % Improved interface for floating objects
+\usepackage[final, colorlinks = true, 
+            linkcolor = black, 
+            citecolor = black]{hyperref} % For hyperlinks in the PDF
+\usepackage{graphicx, multicol} % Enhanced support for graphics
+\usepackage{subfigure} % Subfigure package
+\usepackage{color}
+\usepackage{xcolor} % Driver-independent color extensions
+\usepackage{marvosym, wasysym} % More symbols
+\usepackage{rotating} % Rotation tools
+\usepackage{censor} % Facilities for controlling restricted text
+\usepackage{listings} % Environment for non-formatted code
+\usepackage{algorithm}
+\usepackage{algpseudocode} % Environment for specifying algorithms in a natural way
+\usepackage{booktabs} % Enhances quality of tables
+
+\usepackage{cases}
+\usepackage{bookmark}
+
+\usepackage{tikz-qtree} % Easy tree drawing tool
+\tikzset{every tree node/.style={align=center,anchor=north},
+         level distance=2cm} % Configuration for q-trees
+
+\usepackage[backend=biber,style=numeric,
+            sorting=nyt]{biblatex} % Complete reimplementation of bibliographic facilities
+
+\usepackage{csquotes} % Context sensitive quotation facilities
+
+\usepackage[yyyymmdd]{datetime} % Uses YEAR-MONTH-DAY format for dates
+\renewcommand{\dateseparator}{-} % Sets dateseparator to '-'
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{}\renewcommand{\headrulewidth}{0pt} % Blank out the default header
+\fancyfoot[L]{} % Custom footer text
+\fancyfoot[C]{} % Custom footer text
+\fancyfoot[R]{\thepage} % Custom footer text
+
+\newcommand{\note}[1]{\marginpar{\scriptsize \textcolor{red}{#1}}} % Enables comments in red on margin
+
+\usepackage{abstract}
+\renewcommand{\abstractnamefont}{\normalfont\large\bfseries}
+\renewcommand{\abstracttextfont}{\normalfont\normalsize}
+
+
+\lstset{ %
+	language=python,                % choose the language of the code
+	basicstyle=\footnotesize\ttfamily,       % the size of the fonts that are used for the code
+	numbers=left,                   % where to put the line-numbers
+	numberstyle=\tiny\color{blue},      % the size of the fonts that are used for the line-numbers
+	stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+	numbersep=5pt,                  % how far the line-numbers are from the code
+	backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+	showspaces=false,               % show spaces adding particular underscores
+	showstringspaces=false,         % underline spaces within strings
+	showtabs=false,                 % show tabs within strings adding particular underscores
+	frame=single,                   % adds a frame around the code
+	tabsize=4,                      % sets default tabsize to 4 spaces  
+	captionpos=b,                   % sets the caption-position to bottom
+	breaklines=true,                % sets automatic line breaking
+	breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+	escapeinside={\%*}{*)},
+	commentstyle=\color{gray},
+	keywordstyle=\bfseries\color{red},
+	stringstyle=\color{orange},
+	keepspaces=true
+}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\fancyhead[C]{}
+\hrule \medskip % Upper rule
+\begin{minipage}{0.295\textwidth} % Left side of title section
+	\raggedright
+	DATA130011.01\\ % Your course code
+	\footnotesize % Authors text size
+	\hfill\\
+	Neural Network and Deep Learning\\ % Your course name
+\end{minipage}
+\begin{minipage}{0.4\textwidth} % Center of title section
+	\centering
+	\large % Title text size
+	\textbf{Project III}\\ % Assignment title and number
+	\normalsize % Subtitle text size
+	\textbf{Novel Image Captioning}\\ % Assignment subtitle
+\end{minipage}
+\begin{minipage}{0.295\textwidth} % Right side of title section
+	\raggedleft
+	Shao Yi\\ % Your name
+	\footnotesize % Email text size
+	\hfill\\
+	\today\\ % Date
+\end{minipage}
+\medskip\hrule % Lower rule
+\bigskip
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+	Novel Image Captioning is a challenging task connecting both computer vision and natural
+	language processing. There're a lot of related works on the topic, in this project we
+	will present the results on Decoupled Novel Object Captioner (DNOC), finally we achieve
+	the score of 57.24 on F1, 69.50 on CIDEr-D, 21.68 on METEOR and 14.61 on SPICE.
+
+	Repo: \url{https://github.com/Tequila-Sunrise/Decoupled-Novel-Object-Captioner}
+\end{abstract}
+
+\bigskip
+
+%------------------------------------------------
+
+\section{\textbf{Introduction}}
+
+\subsection{\textbf{Image Captioning}}
+
+Image Captioning is the task of describing the content of an image in words. This task lies
+at the intersection of computer vision and natural language processing. Most image captioning
+systems use an encoder-decoder framework, in which the Convolutional Neural Network (CNN)
+is usually used as the image encoder, and the decoder is usually a Recurrent Neural Network
+(RNN) to sequentially predict the next word given the previous words. The captaining networks
+need a large number of image-sentence paired data to train a meaningful model. The most
+popular benchmarks are nocaps and COCO, and models are typically evaluated according to a
+BLEU or CIDER metric.
+
+\subsection{\textbf{Novel Task and Model Selection}}
+
+While recent deep neural network models have achieved promising results on the image
+captioning task, they rely largely on the availability of corpora with paired image and
+sentence captions to describe objects in context. We would like to address the task of
+generating descriptions of novel objects which are not present in paired imagesentence
+datasets.
+
+Certainly, a pre-trained captioning model mentioned above can hardly be applied directly to
+a brand new domain in which some novel object categories exist, i.e., the objects and their
+description words are unseen during model training. To correctly caption the novel object,
+it requires professional human workers to annotate the images by sentences with the novel
+words, which is time-consuming and labor-expensive and thus limiting its usage in real-world
+applications.
+
+There are already many works have been published before, including the following: Henzdricks
+et al. proposed the Deep Compositional Captioner (DCC), a pilot work to address the task
+of generating descriptions of novel objects which are not present in paired image-sentence
+datasets. Then Venugopalan et al. discussed a Novel Object Captioner (NOC) to further improve
+the DCC to an end-to-end system by jointly training the visual classification model, language
+sequence model, and the captioning model. Anderson et al. leveraged an approximate search
+algorithm to forcibly guarantee the inclusion of selected words during the evaluation stage
+of a caption generation model. Yao et al. exploited a mechanism to copy the detection results
+to the output sentence with a pre-trained language sequence model. What's more, Lu et al.
+also proposed NBT to generate a sentence template with slot locations, which are then filled
+in by visual concepts from object detectors.
+
+However, models mentioned above all have to use extra data of the novel object to train
+their word embedding, in addition, NBT even has to manually defined category mapping list
+to replace the novel object's word embedding with an existing one. Different from existing
+methods, DNOC focuses on zero-shot novel object captioning task in which there are no
+additional sentences or pretrained models to learn such embeddings for novel objects.
+
+\bigskip
+
+%------------------------------------------------
+
+\section{\textbf{Decoupled Novel Object Captioner}}
+
+In this project, we try to solve the zero-shot novel object captioning task where the
+machine generates descriptions without extra sentences about the novel object. To tackle
+the challenging problem, we follow the guidance of the Decoupled Novel Object Captioner
+(DNOC) framework that can fully decouple the language sequence model from the object
+descriptions. DNOC has two components. The first one is a Sequence Model with the Placeholder
+(SM-P) to generate a sentence containing placeholders where the placeholder represents an
+unseen novel object. Therefore, the sequence model can be decoupled from the novel object
+descriptions. The second one is a key-value object memory built upon the freely available
+detection model, it contains the visual information and the corresponding word for each
+object. In short, the SM-P intends to generate a query to retrieve the words from the object
+memory, and the placeholder will then be filled with the correct word, resulting in a caption
+with novel object descriptions. The experimental results on the held-out MSCOCO dataset
+demonstrate the ability of DNOC in describing novel concepts in the zero-shot novel object
+captioning task.
+
+\subsection{\textbf{Sequence Model with the Placeholder}}
+
+Sequence Model with the placeholder (SM-P) is applied to fully decouple the sequence model
+from novel object descriptions. As discussed above, the classical sequence model cannot
+take an out-of-vocabulary word as input. To solve this problem, a new token is designed,
+which is denoted as ``\textless PL\textgreater''. It is used in the decoder similarly to
+other tokens, such as ``\textless GO\textgreater'', ``\textless PAD\textgreater'',
+``\textless EOS\textgreater'', ``\textless UNKNOWN\textgreater'' in most natural language
+processing works. And the token ``\textless PL\textgreater'' is added into the paired
+vocabulary to learn the embedding.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{./img/sm-p.jpg}
+	\caption{The comparison of the typical sequence model and the proposed SM-P}
+	\label{fig:sm-p}
+\end{figure}
+
+The new representation could be jointly learned with known words. the new token
+``\textless PL\textgreater'' is carefully designed in both the input and the output of the
+decoder, which enables us to handle the out-of-vocabulary words. When the decoder outputs
+``\textless PL\textgreater'', the DNOC model utilizes the external knowledge from the object
+detection model to replace it with novel description. The SM-P is flexible that can be
+readily incorporated in the sequence to sequence model. Without loss of generality, LSTM
+is applied as the backbone of SM-P.
+
+For Instance, in Figure \ref{fig:sm-p}, the classical sequence model cannot handle the
+out-of-vocabulary word ``zebra'' as input. Instead, the SM-P model outputs the
+``\textless PL\textgreater'' token when it needs to generate a word about the novel object
+``zebra''. This token is further fed to the decoder at the next time step. Thus, the
+subsequent words can be generated. Finally, the SM-P generates the sentence with the
+placeholder ``A \textless PL\textgreater is standing ...''. The ``\textless PL\textgreater''
+token will be replaced by the novel word generated from the key-value object memory.
+
+\subsection{\textbf{Key-Value Object Memory}}
+
+In order to incorporate the novel words into the generated sentences with the placeholder,
+DNOC exploits a pre-trained object detection model to build the key-value object memory.
+
+A freely available object detection model is applied on the input images to find novel
+objects. For the $i$-th detected object obj $j_{i}$, the CNN feature representations
+$\mathrm{f}_{i} \in \mathbb{R}^{1 \times N_{f}}$ and the predicted semantic class label
+$1_{i} \in \mathbb{R}^{1 \times N_{D}}$ form a key-value pair, with the feature as key
+and the semantic label as the value. $N_{f}$ is the feature dimension of CNN representation,
+$N_{D}$ is the number of total detection classes. The key-value pairs associate the semantic
+class labels (descriptions of the novel objects) with their appearance feature. Futhermore,
+we extract the CNN feature $\mathrm{f}_{i}$ for obj $j_{i}$ from the ROI pooling layer of
+the detection model. Among all the detected results, the top $N_{d e t}$ key-value pairs
+are selected according to their confidence scores, which form the key-value object memory
+$\mathcal{M}_{\mathrm{obj}}$. For each input image, the memory $\mathcal{M}_{\text {obj }}$
+is initialized to be empty.
+
+Let $\mathcal{W}_{\text {det }}$ be the vocabulary of the detection model, which consists
+of $N_{D}$ detection class labels. Note that each word in $\mathcal{W}_{d e t}$ is the
+detection class label in the one-hot format, since we cannot obtain trained word embedding
+function $\phi_{w}(\cdot)$ for the new word. To generate the novel word and replace the
+placeholder in the sentence at time step $t$, we define the query $q_{t}$ to be a linear
+transformation of previous hidden state $\mathrm{h}_{t-1}$ when the model meets the special
+token ``\textless PL\textgreater'' at time step $t$:
+
+$$
+	q_{t}=w_{t-1},
+$$
+
+where $\mathbf{h}_{t-1} \in \mathbb{R}^{N_{h}}$ is the previous hidden state at ( $t-1$ )-th
+step from the sequence model, and $w \in \mathbb{R}^{N_{f} \times N_{h}}$ is the linear
+transformation to convert the hidden state from semantic feature space to CNN appearance
+feature space. We have the following operations on the key-value memory
+$\mathcal{M}_{\text {obj }}$ :
+
+$$
+	\begin{aligned}
+		\mathcal{M}_{\mathrm{obj}} & \leftarrow \operatorname{WRITE}\left(\mathcal{M}_{\mathrm{obj}},\left(\mathrm{f}_{i}, 1_{i}\right)\right) \\
+		\mathrm{w}_{\mathrm{obj}}  & \leftarrow \operatorname{READ}\left(q, \mathcal{M}_{\mathrm{obj}}\right)
+	\end{aligned}
+$$
+
+WRITE operation is to write the input key-value pair $\left(\mathrm{f}_{i}, 1_{i}\right)$
+into the existing memory $\mathcal{M}_{\mathrm{obj}}$. The input key-value pair is written
+to a new slot of the memory.
+
+READ operation takes the query $q$ as input, and conducts content-based addressing on the
+object memory $\mathcal{M}_{\text {obj}}$. It aims to find related object information
+according to the similarity metric, $q K^{T}$. The output of READ operation is,
+
+$$
+	\mathrm{w}_{\mathrm{obj}}=\left(q K^{T}\right) V
+$$
+
+where $K^{T} \in \mathbb{R}^{N_{f} \times N_{\text {det }}}, V \in \mathbb{R}^{N_{\text {det }} \times N_{D}}$
+are the vertical concatenations of all keys and values in the memory, respectively. The output
+$\mathrm{w}_{\mathrm{obj}} \in \mathbb{R}^{N_{D}}$ is the combination of all semantic labels.
+In evaluation, the word with the max prediction is used as the query result.
+
+\subsection{\textbf{Framework Overview}}
+
+With the above two components, DNOC framework is proposed to caption images with novel
+objects. The framework is based on the encoder-decoder architecture with the SM-P and
+key-value object memory. For an input image with novel objects, we have the following
+steps to generate the captioning sentence:
+
+\begin{enumerate}
+	\item We first exploit the SM-P to generate a captioning sentence with some placeholders.
+	      Each placeholder represents an unseen word/phrase for a novel object;
+	\item We then build a key-value object memory $\mathcal{M}_{\text {obj }}$ for each input
+	      based on the detection feature-label pairs $\left\{\mathrm{f}_{i}, l_{i}\right\}$ on
+	      the image;
+	\item Finally, we replace the placeholders of the sentence by corresponding object
+	      descriptions. For the placeholder generated at time step $t$, we take the previous
+	      hidden state $\mathbf{h}_{t-1}$ from SM-P as a query to read the object memory
+	      $\mathcal{M}_{\text {obj }}$, and replace the placeholder by the query results
+	      $\mathrm{w}_{o b j}$.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{./img/overview.jpg}
+	\caption{The overview of the DNOC framework}
+	\label{fig:overview}
+\end{figure}
+
+In the example shown in Figure \ref{fig:overview}, the ``dog'' and ``cake'' are the novel
+objects which are not present in training. The SM-P first generates a sentence ``a
+\textless PL\textgreater is looking at a \textless PL\textgreater''. Meanwhile, we build
+the key-value object memory $\mathcal{M}_{\mathrm{obj}}$ based on the detection results,
+which contains both the visual information and the corresponding word (the detection class
+label). The hidden state at the step before each placeholder is used as the query to read
+from the memory. The memory will then return the correct object description, i.e., ``dog''
+and ``cake''. Finally, we replace the placeholders by the query results and thus generate
+the sentence with novel words ``a dog is looking at a cake''.
+
+\subsection{\textbf{Training Details}}
+
+To learn how to exploit the "out-of-vocabulary" words, we modify the input and target for
+SM-P in training. We define $\mathcal{W}_{p d}$ as the intersection set of the vocabulary
+$\mathcal{W}_{\text {paired }}$ and vocabulary $\mathcal{W}_{\text {det }}$,
+
+$$
+	\mathcal{W}_{p d}=\mathcal{W}_{\text {paired }} \cap \mathcal{W}_{\text {det }}
+$$
+
+Then we modify the input annotation sentence of the sequence model SM-P by replacing each
+word $w_{i} \in \mathcal{W}_{p d}$ with the token ``\textless PL\textgreater''. The new
+input word $\hat{\mathbf{w}}_{t}$ at $t$-th time step is,
+
+$$
+	\hat{\mathbf{w}}_{t}=\left\{\begin{array}{cl}
+		\langle P L\rangle, & \mathbf{w}_{t} \in \mathcal{W}_{p d} \\
+		\mathbf{w}_{t},     & \text { otherwise }
+	\end{array}\right.
+$$
+
+The loss function is composed of two parts. The first part (for SM-P) is defined as:
+
+$$
+	\begin{aligned}
+		 & \mathcal{L}_{S M-P}\left(\hat{\mathbf{w}}_{0}, \hat{\mathbf{w}}_{1}, \ldots, \hat{\mathbf{w}}_{t-1}, \phi_{e}(\mathrm{I}) ; \theta_{S M-P}\right)=                                                       \\
+		 & -\sum_{t} \log \left(\operatorname{softmax}_{t}\left(F_{S M}\left(\hat{\mathbf{w}}_{0}, \hat{\mathbf{w}}_{1}, \ldots, \hat{\mathbf{w}}_{t-1}, \phi_{e}(\mathrm{I}) ; \theta_{S M-P}\right)\right)\right)
+	\end{aligned}
+$$
+
+
+where the $\operatorname{softmax}_{t}$ denotes the softmax operation on the $t$-th step.
+
+As for the key-value object memory $\mathcal{M}_{\text {obj }}$, we define the optimizing
+loss by comparing the query result $\mathbf{w}_{o b j_{t}}$ from object memory and the
+word $\mathbf{w}_{t}$ from annotation,
+
+$$
+	\mathcal{L}_{\mathcal{M}_{\mathrm{obj}}}=\sum_{t} a_{t} C E\left(\mathbf{w}_{o b j_{t}}, \mathbf{w}_{t}\right)
+$$
+
+where $C E(\cdot)$ is the cross-entropy loss function, and $a_{t}$ is the weight at time
+step $t$ that is calculated by,
+
+$$
+	a_{t}= \begin{cases}1, & \mathrm{w}_{t} \in \mathcal{W}_{p d} \\ 0, & \text { otherwise. }\end{cases}
+$$
+
+There are two trainable components above. One is the query $q$, the hidden state from the
+LSTM model. The other is the linear transformation on detection features in the computation
+of the memory key. We simultaneously minimize the two loss functions.
+
+The final objective function for the DNOC framework is,
+
+$$
+	\mathcal{L}=\mathcal{L}_{S M-P}+\mathcal{L}_{\mathcal{M}_{\text {obj }}}
+$$
+
+\bigskip
+
+%------------------------------------------------
+
+\section{\textbf{Experiment Results}}
+
+\subsection{\textbf{The held-out MSCOCO dataset}}
+
+The MSCOCO dataset is a large scale image captioning dataset. For each image, there are
+five human-annotated paired sentence descriptions. Following the previous works, we employ
+the subset of the MSCOCO dataset, but excludes all image-sentence paired captioning
+annotations which describe at least one of eight MSCOCO objects. The eight objects are
+chosen by clustering the vectors from the word2vec embeddings over all the 80 objects in
+MSCOCO segmentation challenge. It results in the final eight novel objects for evaluation,
+which are ``bottle'', ``bus'', ``couch'', ``microwave'', ``pizza'', ``racket'', ``suitcase'',
+and ``zebra''. These novel objects are held-out in the training split and appear only in
+the evaluation split.
+
+\subsection{\textbf{Experimental Settings}}
+
+\textbf{Evaluation Metrics.} Metric for Evaluation of Translation with Explicit Ordering
+(METEOR) is an effective machine translation metric which relies on the use of stemmers,
+WordNet synonyms and paraphrase tables to identify matches between candidate sentence and
+reference sentences. However, as pointed before, the METEOR metric is not well designed
+for the novel object captioning task. It is possible to achieve high METEOR scores even
+without mentioning the novel objects. Therefore, to better evaluate the description quality,
+we also use the F1-score as an evaluation metric. F1-score considers false positives, false
+negatives, and true positives, indicating whether a generated sentence includes a new object.
+In addition, metrics like CIDEr-D and SPICE are also used to evaluate the quality of the
+generated descriptions.
+
+\textbf{Implementation Details.} We apply a 16-layer VGG pre-trained on the ImageNet
+ILSVRC12 dataset as the visual encoder. The CNN encoder is fixed during model training.
+The decoder is an LSTM with cell size 1,024 and 15 sequence steps. For each input image,
+we take the output of the fc7 layer from the pre-trained VGG-16 model with 4,096
+dimensions as the image representation. The representations are processed by a
+fullyconnected layer and then fed to the decoder SM-P as the initial state. For the word
+embedding, we do not exploit the per-trained word embeddings with additional knowledge data.
+Instead, we learn the word embedding $\phi_{w}$ with 1,024 dimensions for all words including
+the placeholder token. We implement our DNOC model with TensorFlow. Our DNOC is optimized
+by ADAM with the learning rate of $1 \times 10^{-3}$. The weight decay is set to
+$5 \times 10^{-5}$. We train the DNOC for 20 epochs and choose the model with the best
+validation performance for testing.
+
+\subsection{\textbf{Performance Results}}
+
+We compare DNOC with some other state-of-the-art methods on the held-out MSCOCO dataset.
+
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{c|cccccccc|c}
+			\toprule
+			Method      & $\mathrm{F}_{\text{bottle}}$ & $\mathrm{F}_{\text{bus}}$ & $\mathrm{F}_{\text{couch}}$ & $\mathrm{F}_{\text{microwave}}$ & $\mathrm{F}_{\text{pizza}}$ & $\mathrm{F}_{\text{racket}}$ & $\mathrm{F}_{\text{suitcase}}$ & $\mathrm{F}_{\text{zebra}}$ & $\mathrm{F}_{\text{average}}$ \\
+			\midrule
+			DCC         & 4.63                         & 29.79                     & 45.87                       & 28.09                           & 64.59                       & 52.24                        & 13.16                          & 79.88                       & 39.78                         \\
+			NOC         & 14.93                        & 68.96                     & 43.82                       & 37.89                           & 66.53                       & 65.87                        & 28.13                          & 88.66                       & 51.85                         \\
+			LSTM-C      & 29.68                        & 74.42                     & 38.77                       & 27.81                           & 68.17                       & \textbf{70.27}               & 44.76                          & \textbf{91.4}               & 55.66                         \\
+			NBT+G       & 7.1                          & 73.7                      & 34.4                        & \textbf{61.9}                   & 59.9                        & 20.2                         & 42.3                           & 88.5                        & 48.5                          \\
+			\midrule
+			DNOC(Paper) & \textbf{33.04}               & 76.87                     & 53.97                       & 46.57                           & \textbf{75.82}              & 32.98                        & 59.48                          & 84.58                       & \textbf{57.92}                \\
+			DNOC(Our)   & 27.85                        & \textbf{77.77}            & \textbf{54.47}              & 48.63                           & 75,34                       & 29.66                        & \textbf{60.10}                 & 84.13                       & 57.24                         \\
+			\bottomrule
+		\end{tabular}
+		\caption{Comparison on F1-score}
+	\end{center}
+\end{table}
+
+The other evaluation metrics are presented in the following table.
+
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{c|ccc}
+			\toprule
+			Method      & CIDEr-D & METEOR & SPICE \\
+			\midrule
+			DNOC(Paper) &         & 20.41  &       \\
+			DNOC(Our)   & 69.50   & 21.68  & 14.61 \\
+			\bottomrule
+		\end{tabular}
+		\caption{Other evaluation metrics}
+	\end{center}
+\end{table}
+
+\subsection{\textbf{Qualitative Results}}
+
+In Figure \ref{fig:qua-res} we will show some qualitative results on the held-out MSCOCO
+dataset.
+
+\begin{figure}[H]
+	\centering
+	\subfigure[a plate with a pizza and a wine glass]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000000450.jpg}
+		\end{minipage}
+	}
+	\subfigure[a zebra standing in a field with trees in the background]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000009709.jpg}
+		\end{minipage}
+	}
+	\\
+	\subfigure[a person laying on a couch with a laptop]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000032068.jpg}
+		\end{minipage}
+	}
+	\subfigure[a microwave with a bottle and a bottle on it]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000151869.jpg}
+		\end{minipage}
+	}
+	\\
+	\subfigure[a cat laying on top of a suitcase]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000019131.jpg}
+		\end{minipage}
+	}
+	\subfigure[a bus is driving down the street in the city]{
+		\begin{minipage}[b]{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{./img/COCO_train2014_000000249813.jpg}
+		\end{minipage}
+	}
+	\caption{Qualitative results}
+	\label{fig:qua-res}
+\end{figure}
+
+\bigskip
+
+%------------------------------------------------
+
+\section{\textbf{Conclusion}}
+
+In this project, we reproduced the work of DNOC on the held-out MSCOCO dataset, the
+experiment was carried out successfully and the results are quite good.
+
+As for the further work, attention-based image captioning is a promising research area,
+as some well-known models are already implemented in the literature and worth to be
+studied.
+
+\bigskip
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+% \cite{Eureka}
+% \printbibliography
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
